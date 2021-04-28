@@ -5,32 +5,30 @@
 
 int main(int argc, char const *argv[])
 {
-    int pipefd[2];
-    if(pipe(pipefd) < 0) {
+    int fd[2];
+    if(pipe(fd) < 0) {
         perror("pipe");
         exit(1);
     }
 
-    if(fork() == 0) {
-        close(pipefd[0]);
-        dup2(pipefd[1],STDIN_FILENO);
-        close(pipefd[1]);
-        execlp("ls", "ls", "/etc", NULL);
-        _exit(1);
-    }
-
-    close(pipefd[1]);
 
     if(fork() == 0) {
-        dup2(pipefd[0],STDIN_FILENO);
-        close(pipefd[0]);
-        execlp("wc", "wc", "-l", NULL);
+        close(fd[0]);
+        dup2(fd[1],STDOUT_FILENO);
+        execlp("ls", "ls","/etc", NULL);
         _exit(1);
     }
+    close(fd[1]);
+    wait(NULL);
     
-    close(pipefd[0]);
+    if(fork() == 0) {
+        close(fd[1]);
+        dup2(fd[0],STDIN_FILENO);
+        execlp("wc", "wc", "-l",NULL);
+        _exit(1);
+    }
+    close(fd[0]);
+    wait(NULL);
 
-    if(wait(NULL) == -1) puts("Error");
-    if(wait(NULL) == -1) puts("Error");
     return 0;
 }
