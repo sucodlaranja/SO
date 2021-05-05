@@ -11,7 +11,7 @@ int main(int argc, char const *argv[])
     for(int i = 0; i < 4; i++) {
 
         if(i == 0) {
-            if(pipe(p[0]) != 0) {
+            if(pipe(p[0]) < 0) {
                 perror("pipe");
                 exit(1);
             }
@@ -22,7 +22,7 @@ int main(int argc, char const *argv[])
                 dup2(p[0][1],1);
                 close(p[0][1]);
                 execlp("grep", "grep", "-v", "^#", "/etc/passwd",NULL);
-                _exit(1);
+                _exit(0);
             }
             
             close(p[0][1]);
@@ -30,14 +30,12 @@ int main(int argc, char const *argv[])
 
         else if(i == 3) {
             if(fork() == 0) {
-                close(p[2][1]);
                 dup2(p[2][0],0);
                 close(p[2][0]);
                 execlp("wc","wc","-l",NULL);
             }
-            
             close(p[2][0]);
-            close(p[2][1]);
+            
         }
 
         else {
@@ -55,10 +53,11 @@ int main(int argc, char const *argv[])
                 
                 if(i==1) execlp("cut", "cut", "-f7", "-d:", NULL);
                 else execlp("uniq", "uniq", NULL);
-                _exit(1);
+                _exit(0);
 
             }
             close(p[i-1][0]);
+            close(p[i][1]);
         }
 
     }
