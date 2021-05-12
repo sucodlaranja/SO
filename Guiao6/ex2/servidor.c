@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char const *argv[])
 {
@@ -12,7 +13,7 @@ int main(int argc, char const *argv[])
     }
 
     int bytes_read;
-    int logfile = open("log.txt",O_CREAT | O_TRUNC | O_WRONLY);
+    int logfile = open("log.txt",O_APPEND | O_CREAT | O_TRUNC | O_WRONLY ,0660);
     int fd = open("fifo",O_RDONLY);
     char buffer[1024];
     
@@ -20,13 +21,15 @@ int main(int argc, char const *argv[])
     while (1)
     {
         if(open("fifo",O_RDONLY) != -1) {
-        if((bytes_read = read(fd,buffer,1024)) > 0) {
-            printf("Writing %s", buffer);
-            write(logfile,buffer,bytes_read);
+            if((bytes_read = read(fd,buffer,1024)) > 0) {
+                printf("Writing %s", buffer);
+                write(logfile,buffer,bytes_read);
+            
+            }
         }
-        }
+        close(fd);
     }
-    close(fd);
+    unlink("fifo");
     close(logfile);
     return 0;
 }
